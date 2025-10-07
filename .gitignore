@@ -1,0 +1,16 @@
+﻿vendor/
+bootstrap/cache/
+storage/*.key
+storage/app/*.log
+storage/app/public/*
+!.gitignore
+
+apps/api/.env
+apps/web/.env.local
+
+node_modules/
+apps/web/node_modules/
+apps/web/dist/
+
+.DS_Store
+Thumbs.db

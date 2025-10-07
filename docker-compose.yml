@@ -1,0 +1,63 @@
+name: vehicles-stack
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: vehicles
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - db_mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/api/.env
+    volumes:
+      - ./apps/api:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+    command: >
+      sh -lc "
+      if [ ! -f artisan ]; then
+        rm -rf ./* .[^.]* 2>/dev/null || true &&
+        composer create-project laravel/laravel:^12 . ;
+      fi &&
+      composer install &&
+      php artisan key:generate --ansi || true &&
+      php artisan migrate --seed || true &&
+      php artisan serve --host=0.0.0.0 --port=8000
+      "
+
+  web:
+    image: node:20.18.1
+    working_dir: /usr/src/app
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api
+    volumes:
+      - ./apps/web:/usr/src/app
+    ports:
+      - "5173:5173"
+    command: >
+      sh -lc "npm ci || npm i && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - api
+
+
+volumes:
+  db_mysql_data:
