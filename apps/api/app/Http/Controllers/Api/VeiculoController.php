@@ -20,14 +20,14 @@ class VeiculoController extends Controller
     return VeiculoRecurso::collection($this->servico->listarPaginado($filtros));
 }
 
-public function store(\App\Http\Requests\VeiculoArmazenarRequest $request)
+public function store(VeiculoArmazenarRequest $request)
 {
     $dados = $request->validated();
-    $dados['user_id'] = Auth::id();   // <- tem que ser user_id
+    $dados['user_id'] = Auth::id();
+    $v = Veiculo::create($dados);
+    
 
-    $v = \App\Models\Veiculo::create($dados);
-
-    return new \App\Http\Resources\VeiculoRecurso($v->load('capa','imagens'));
+    // return new \App\Http\Resources\VeiculoRecurso($v->load('capa','imagens'));
 }
 
 public function show(int $id)
