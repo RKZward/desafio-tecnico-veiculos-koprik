@@ -9,84 +9,46 @@ use App\Models\Veiculo;
 use App\Http\Resources\VeiculoRecurso;
 use App\Http\Requests\VeiculoArmazenarRequest;
 use App\Http\Requests\VeiculoAtualizarRequest;
+use App\Services\VeiculoServico;
 
 class VeiculoController extends Controller
 {
+    public function __construct(private VeiculoServico $servico) {}
     public function index(Request $req)
-    {
-        $query = Veiculo::with('capa');
+{
+    $filtros = $req->only(['busca','marca','modelo','placa','ordenar','por_pagina']);
+    return VeiculoRecurso::collection($this->servico->listarPaginado($filtros));
+}
 
-        // busca livre: ?busca=... (ou ?q=...)
-        $busca = $req->query('busca', $req->query('q'));
-        if ($busca) {
-            $s = $busca;
-            $query->where(fn($w) => $w
-                ->where('marca',  'like', "%{$s}%")
-                ->orWhere('modelo','like', "%{$s}%")
-                ->orWhere('placa', 'like', "%{$s}%")
-                ->orWhere('chassi','like', "%{$s}%")
-            );
-        }
+public function store(\App\Http\Requests\VeiculoArmazenarRequest $request)
+{
+    $dados = $request->validated();
+    $dados['user_id'] = Auth::id();   // <- tem que ser user_id
 
-        // filtros diretos
-        foreach (['marca','modelo','placa'] as $campo) {
-            if ($v = $req->query($campo)) {
-                $query->where($campo, $v);
-            }
-        }
+    $v = \App\Models\Veiculo::create($dados);
 
-        // ordenação: ?ordenar=km,-valor_venda,ano (ou ?sort=...)
-        $ordenar = $req->query('ordenar', $req->query('sort'));
-        if ($ordenar) {
-            foreach (explode(',', $ordenar) as $s) {
-                $dir = str_starts_with($s, '-') ? 'desc' : 'asc';
-                $col = ltrim($s, '-');
-                if (in_array($col, ['km','valor_venda','ano','marca','modelo'])) {
-                    $query->orderBy($col, $dir);
-                }
-            }
-        } else {
-            $query->latest('id');
-        }
+    return new \App\Http\Resources\VeiculoRecurso($v->load('capa','imagens'));
+}
 
-        // paginação: ?por_pagina=10 (ou ?per_page=10)
-        $porPagina = (int) ($req->query('por_pagina', $req->query('per_page', 10)));
-        $porPagina = min(100, max(5, $porPagina));
+public function show(int $id)
+{
+    return new VeiculoRecurso($this->servico->obter($id));
+}
 
-        return VeiculoRecurso::collection($query->paginate($porPagina));
-    }
+public function update(VeiculoAtualizarRequest $req, int $id)
+{
+    $v = Veiculo::findOrFail($id);
+    $this->authorize('update', $v);
+    $v = $this->servico->atualizar($v, $req->validated());
+    return new VeiculoRecurso($v->fresh('capa','imagens'));
+}
 
-    public function store(VeiculoArmazenarRequest $req)
-    {
-        $dados = $req->validated() + ['usuario_id' => Auth::id()];
-        $veiculo = Veiculo::create($dados);
+public function destroy(int $id)
+{
+    $v = Veiculo::findOrFail($id);
+    $this->authorize('delete', $v);
+    $this->servico->excluir($v);
+    return response()->noContent();
+}
 
-        return new VeiculoRecurso($veiculo->load('capa','imagens'));
-    }
-
-    public function show(int $id)
-    {
-        $veiculo = Veiculo::with('capa','imagens')->findOrFail($id);
-        return new VeiculoRecurso($veiculo);
-    }
-
-    public function update(VeiculoAtualizarRequest $req, int $id)
-    {
-        $veiculo = Veiculo::findOrFail($id);
-        $this->authorize('update', $veiculo);
-
-        $veiculo->update($req->validated());
-
-        return new VeiculoRecurso($veiculo->fresh('capa','imagens'));
-    }
-
-    public function destroy(int $id)
-    {
-        $veiculo = Veiculo::findOrFail($id);
-        $this->authorize('delete', $veiculo);
-
-        $veiculo->delete();
-
-        return response()->noContent();
-    }
 }

@@ -3,13 +3,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\{BelongsTo,HasMany,HasOne};
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Veiculo extends Model
 {
-    protected $table = 'veiculos';
+    use HasFactory;
+
+    protected $table = 'vehicles';
 
     protected $fillable = [
-        'usuario_id','marca','modelo','ano','placa','chassi','km',
+        'user_id','marca','modelo','ano','placa','chassi','km',
         'valor_venda','cambio','combustivel','cor'
     ];
 
@@ -17,7 +20,7 @@ class Veiculo extends Model
         'ano' => 'integer', 'km' => 'integer', 'valor_venda' => 'decimal:2',
     ];
 
-    public function imagens(): HasMany { return $this->hasMany(ImagemVeiculo::class, 'veiculo_id'); }
-    public function capa(): HasOne { return $this->hasOne(ImagemVeiculo::class, 'veiculo_id')->where('is_cover', true); }
-    public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'usuario_id'); }
+    public function imagens() { return $this->hasMany(ImagemVeiculo::class, 'vehicle_id'); }
+    public function capa()    { return $this->hasOne(ImagemVeiculo::class, 'vehicle_id')->where('is_cover', true); }
+    public function usuario() { return $this->belongsTo(User::class, 'user_id'); }
 }

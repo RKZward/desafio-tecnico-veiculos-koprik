@@ -1,29 +1,38 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\{AuthController,VehicleController,VehicleImageController};
+use App\Http\Controllers\Api\{
+    AuthController,
+    VeiculoController,
+    VeiculoImagemController
+};
+
 
 Route::get('/health', fn () => ['ok' => true, 'ts' => now()]);
 
 
-
 Route::prefix('auth')->group(function () {
-    Route::post('register',[AuthController::class,'register']);
-    Route::post('login',   [AuthController::class,'login']);
-    Route::middleware('auth:sanctum')->group(function(){
-      Route::get('me',     [AuthController::class,'me']);
-      Route::post('logout',[AuthController::class,'logout']);
+    Route::post('registrar', [AuthController::class, 'register']);
+    Route::post('entrar',    [AuthController::class, 'login']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('eu',    [AuthController::class, 'me']);
+        Route::post('sair', [AuthController::class, 'logout']);
     });
-  });
-  
-  Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/vehicles',                [VehicleController::class,'index']);
-    Route::post('/vehicles',               [VehicleController::class,'store']);
-    Route::get('/vehicles/{id}',           [VehicleController::class,'show']);
-    Route::match(['put','patch'],'/vehicles/{id}', [VehicleController::class,'update']);
-    Route::delete('/vehicles/{id}',        [VehicleController::class,'destroy']);
-  
-    Route::post('/vehicles/{vehicleId}/images',                    [VehicleImageController::class,'store']);
-    Route::patch('/vehicles/{vehicleId}/images/{imageId}/cover',   [VehicleImageController::class,'setCover']);
-    Route::delete('/vehicles/{vehicleId}/images/{imageId}',        [VehicleImageController::class,'destroy']);
-  });
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Veículos
+    Route::get   ('/veiculos',            [VeiculoController::class, 'index']);
+    Route::post  ('/veiculos',            [VeiculoController::class, 'store']);   // ou 'armazenar' se você renomeou
+    Route::get   ('/veiculos/{id}',       [VeiculoController::class, 'show']);
+    Route::match (['put','patch'], '/veiculos/{id}', [VeiculoController::class, 'update']);
+    Route::delete('/veiculos/{id}',       [VeiculoController::class, 'destroy']);
+
+    // Imagens do veículo
+    Route::post  ('/veiculos/{veiculoId}/imagens',                    [VeiculoImagemController::class, 'enviar']);
+    Route::patch ('/veiculos/{veiculoId}/imagens/{imagemId}/capa',    [VeiculoImagemController::class, 'definirCapa']);
+    Route::delete('/veiculos/{veiculoId}/imagens/{imagemId}',         [VeiculoImagemController::class, 'excluir']);
+});

@@ -1,6 +1,5 @@
 <?php
 
-
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Não redireciona guest para rota 'login' em requests da API
+        $middleware->redirectGuestsTo(fn ($request) => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
