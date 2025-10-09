@@ -13,7 +13,7 @@ class VeiculoArmazenarRequest extends FormRequest
             'marca'        => ['required','string','max:60'],
             'modelo'       => ['required','string','max:80'],
             'ano'          => ['required','integer','between:1900,'.(date('Y')+1)],
-            'placa'        => ['required','string','max:10','unique:veiculos,placa'],
+            'placa'        => ['required','regex:/^[A-Z]{3}\d[A-Z]\d{2}$/','unique:veiculos,placa'],
             'chassi'       => ['required','string','size:17','unique:veiculos,chassi'],
             'km'           => ['required','integer','min:0'],
             'valor_venda'  => ['required','numeric','min:0'],

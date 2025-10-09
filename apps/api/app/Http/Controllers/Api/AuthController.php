@@ -57,6 +57,14 @@ class AuthController extends Controller
         ]);
     }
 
+    public function eu(Request $request)
+    {
+        // NÃO chame createToken aqui!
+        // Apenas devolva o usuário autenticado (ou null) e deixe o middleware cuidar do 401.
+        return response()->json([
+            'user' => $request->user(),
+        ]);
+    }
     public function me(Request $req)
     {
         return ['user' => $req->user()];

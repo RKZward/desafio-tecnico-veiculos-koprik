@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\{
 };
 
 
-Route::get('/health', fn () => ['ok' => true, 'ts' => now()]);
+// Route::get('/health', fn () => ['ok' => true, 'ts' => now()]);
 
 
 Route::prefix('auth')->group(function () {
@@ -16,7 +16,7 @@ Route::prefix('auth')->group(function () {
     Route::post('entrar',    [AuthController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('eu',    [AuthController::class, 'me']);
+        Route::get('eu',    [AuthController::class, 'eu']);
         Route::post('sair', [AuthController::class, 'logout']);
     });
 });
@@ -25,11 +25,12 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
     // Veículos
-    Route::get   ('/veiculos',            [VeiculoController::class, 'index']);
-    Route::post  ('/veiculos',            [VeiculoController::class, 'store']);   // ou 'armazenar' se você renomeou
-    Route::get   ('/veiculos/{id}',       [VeiculoController::class, 'show']);
-    Route::match (['put','patch'], '/veiculos/{id}', [VeiculoController::class, 'update']);
-    Route::delete('/veiculos/{id}',       [VeiculoController::class, 'destroy']);
+    Route::apiResource('veiculos', VeiculoController::class);
+    Route::get   ('/veiculos',                  [VeiculoController::class, 'index']);
+    Route::post  ('/veiculos',                  [VeiculoController::class, 'store']);
+    Route::get   ('/veiculos/{id}',             [VeiculoController::class, 'show']);
+    Route::match (['put','patch'],'/veiculos/{id}', [VeiculoController::class, 'update']);
+    Route::delete('/veiculos/{id}',             [VeiculoController::class, 'destroy']);
 
     // Imagens do veículo
     Route::post  ('/veiculos/{veiculoId}/imagens',                    [VeiculoImagemController::class, 'enviar']);

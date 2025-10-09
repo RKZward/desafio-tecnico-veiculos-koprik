@@ -11,8 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
-        // Não redireciona guest para rota 'login' em requests da API
+    ->withMiddleware(function (Illuminate\Foundation\Configuration\Middleware $middleware) {
+        // NUNCA redireciona guest para 'login' (API deve retornar 401)
         $middleware->redirectGuestsTo(fn ($request) => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
