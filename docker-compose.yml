@@ -34,6 +34,7 @@ services:
 
   # PHP-FPM com Laravel (sem expor porta)
   api:
+    container_name: vehicles-stack-api-1
     build:
       context: ./apps/api
       dockerfile: Dockerfile
@@ -62,6 +63,8 @@ services:
     volumes:
       - ./apps/api:/var/www/html
       - api_storage:/var/www/html/storage
+    expose:
+      - 9000
     command: >
         sh -lc "
           mkdir -p storage/app/public bootstrap/cache &&
@@ -94,14 +97,16 @@ services:
 
   # Nginx que "frenteia" o PHP-FPM
   nginx-api:
+    container_name: vehicles-stack-nginx-api-1
     image: nginx:1.27-alpine
     depends_on:
       api:
         condition: service_started
     volumes:
-      - ./apps/api/public:/var/www/html/public:ro
-      - ./nginx/api.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./apps/api:/var/www/html   
+      - ./apps/nginx/api:/etc/nginx/conf.d:ro 
       - api_storage:/var/www/html/storage
+    command: ["nginx","-g","daemon off;"] 
     ports:
       - "8000:80"
     healthcheck:
@@ -118,10 +123,12 @@ services:
       dockerfile: Dockerfile
       args:
         # lido no build do Vite; default para acessar a API via Nginx interno
-        VITE_API_URL: ${VITE_API_URL:-http://nginx-api/api}
+        VITE_API_URL: "http://localhost:8000/api" 
+        # VITE_API_URL: ${VITE_API_URL:-http://nginx-api/api}
     environment:
       # útil se você também usa runtime em dev/local
-      - VITE_API_URL=${VITE_API_URL:-http://nginx-api/api}
+      - VITE_API_URL=http://localhost:8000/api   
+      # - VITE_API_URL=${VITE_API_URL:-http://nginx-api/api}
     ports:
       - "5173:80"          # Nginx do front exposto na 5173 do host
     depends_on:
