@@ -15,10 +15,11 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -pdev --silent"]
+      # Melhor alternativa: executa uma query simples autenticando como root/root
+      test: ["CMD-SHELL", "mysql -uroot -proot -e 'SELECT 1' >/dev/null 2>&1"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 30
     networks: [appnet]
 
   redis:
@@ -31,6 +32,7 @@ services:
       retries: 10
     networks: [appnet]
 
+  # PHP-FPM com Laravel (sem expor porta)
   api:
     build:
       context: ./apps/api
@@ -60,22 +62,53 @@ services:
     volumes:
       - ./apps/api:/var/www/html
       - api_storage:/var/www/html/storage
-      - api_vendor:/var/www/html/vendor
     command: >
-      sh -lc "
-        composer install &&
-        php artisan key:generate || true &&
-        php artisan migrate --force &&
-        php artisan storage:link || true &&
-        php artisan serve --host=0.0.0.0 --port=8000
-      "
-    ports:
-      - "8000:8000"
+        sh -lc "
+          mkdir -p storage/app/public bootstrap/cache &&
+          chown -R www-data:www-data storage bootstrap/cache || true &&
+          chmod -R 775 storage bootstrap/cache || true &&
+
+          php -r \"file_exists('.env') || copy('.env.example','.env');\" &&
+          php artisan key:generate --no-interaction || true &&
+          php artisan package:discover --ansi || true &&
+          php artisan migrate --force --no-interaction &&
+
+          if [ ! -L public/storage ]; then
+            rm -rf public/storage
+            php artisan storage:link --no-interaction
+          fi &&
+
+          php-fpm -F
+        "
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php -v >/dev/null 2>&1 && echo 'ok' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [appnet]
+
+  # Nginx que "frenteia" o PHP-FPM
+  nginx-api:
+    image: nginx:1.27-alpine
+    depends_on:
+      api:
+        condition: service_started
+    volumes:
+      - ./apps/api/public:/var/www/html/public:ro
+      - ./nginx/api.conf:/etc/nginx/conf.d/default.conf:ro
+      - api_storage:/var/www/html/storage
+    ports:
+      - "8000:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks: [appnet]
 
   web:
@@ -95,14 +128,13 @@ services:
     ports:
       - "5173:5173"
     depends_on:
-      api:
+      nginx-api:
         condition: service_started
     networks: [appnet]
 
 volumes:
   db_mysql_data:
   api_storage:
-  api_vendor:
 
 networks:
   appnet:

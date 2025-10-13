@@ -3,76 +3,95 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use App\Models\User;
 
 class AuthController extends Controller
 {
     public function register(Request $req)
     {
-        $dados = $req->validate([
-            'name' => ['required','string','max:255'],
-            'email'=> ['required','email','max:255','unique:users,email'],
-            'password' => ['required','confirmed','min:6'],
+        $data = $req->validate([
+            'name'                  => ['required','string','max:255'],
+            'email'                 => ['required','email','max:255','unique:users,email'],
+            'password'              => ['required','confirmed','min:6'],
+            // precisa enviar password_confirmation no payload
         ]);
+
+        $email = Str::lower(trim($data['email']));
 
         $user = User::create([
-            'name' => $dados['name'],
-            'email'=> $dados['email'],
-            'password' => Hash::make($dados['password']),
+            'name'     => $data['name'],
+            'email'    => $email,
+            'password' => Hash::make($data['password']),
         ]);
 
-        $token = $user->createToken('api')->plainTextToken;
+        $tokenName = 'api:'.($req->userAgent() ?: 'unknown');
+        $token = $user->createToken($tokenName)->plainTextToken;
 
         return response()->json([
-            'user'  => ['id'=>$user->id,'name'=>$user->name,'email'=>$user->email],
             'token' => $token,
             'type'  => 'Bearer',
+            'user'  => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'admin' => (bool) $user->is_admin,
+            ],
         ], 201);
     }
 
     public function login(Request $req)
     {
         $cred = $req->validate([
-            'email' => ['required','email'],
+            'email'    => ['required','email'],
             'password' => ['required','string'],
         ]);
 
-        $user = User::where('email', $cred['email'])->first();
+        $email = Str::lower(trim($cred['email']));
+        $user = User::where('email', $email)->first();
 
-        if (!$user || !Hash::check($cred['password'], $user->password)) {
-            throw ValidationException::withMessages(['email' => 'Credenciais inválidas.']);
+        if (! $user || ! Hash::check($cred['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Credenciais inválidas.'],
+            ]);
         }
 
+        // Se quiser apenas 1 token por usuário, descomente:
         // $user->tokens()->delete();
 
-        $token = $user->createToken('api')->plainTextToken;
+        $tokenName = 'api:'.($req->userAgent() ?: 'unknown');
+        $token = $user->createToken($tokenName)->plainTextToken;
 
         return response()->json([
-            'user'  => ['id'=>$user->id,'name'=>$user->name,'email'=>$user->email],
             'token' => $token,
             'type'  => 'Bearer',
-        ]);
+            'user'  => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'admin' => (bool) $user->is_admin,
+            ],
+        ], 201); // 201 porque um token (recurso) foi criado
     }
 
-    public function eu(Request $request)
-    {
-        // NÃO chame createToken aqui!
-        // Apenas devolva o usuário autenticado (ou null) e deixe o middleware cuidar do 401.
-        return response()->json([
-            'user' => $request->user(),
-        ]);
-    }
     public function me(Request $req)
     {
-        return ['user' => $req->user()];
+        $u = $req->user();
+
+        return response()->json([
+            'id'    => $u->id,
+            'name'  => $u->name,
+            'email' => $u->email,
+            'admin' => (bool) $u->is_admin,
+        ]);
     }
 
     public function logout(Request $req)
     {
         $req->user()->currentAccessToken()?->delete();
-        return response()->json(['ok' => true]);
+        return response()->noContent(); // 204
     }
 }

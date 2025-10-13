@@ -1,0 +1,10 @@
+﻿# Evita enviar o symlink e dados de runtime para o build
+/public/storage
+/storage
+/storage/*
+/vendor
+/node_modules
+.git
+.gitignore
+.env
+.env.*

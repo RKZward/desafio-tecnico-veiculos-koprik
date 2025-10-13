@@ -13,37 +13,31 @@ class VeiculoController extends Controller
 {
     public function index(Request $r)
     {
-        $q = Veiculo::query()->with(['capa','imagens']);
-
-        if ($s = $r->query('busca')) {
-            $q->where(function ($w) use ($s) {
-                $w->where('marca','like',"%{$s}%")
-                  ->orWhere('modelo','like',"%{$s}%")
-                  ->orWhere('placa','like',"%{$s}%")
-                  ->orWhere('chassi','like',"%{$s}%");
+        $q = Veiculo::query()->with(['capa'])->when($r->filled('search'), function($q) use ($r) {
+            $s = $r->string('search');
+            $q->where(function($qq) use ($s) {
+                $qq->where('marca','like',"%{$s}%")
+                   ->orWhere('modelo','like',"%{$s}%")
+                   ->orWhere('placa','like',"%{$s}%");
             });
-        }
-
-        foreach (['marca','modelo','placa'] as $f) {
-            if ($v = $r->query($f)) $q->where($f, $v);
-        }
-
-        if ($sort = $r->query('ordenar')) {
-            foreach (explode(',', $sort) as $s) {
-                $dir = str_starts_with($s,'-') ? 'desc' : 'asc';
-                $col = ltrim($s,'-');
-                if (in_array($col, ['km','valor_venda','ano','marca','modelo'])) {
-                    $q->orderBy($col, $dir);
-                }
-            }
-        } else {
-            $q->latest('id');
-        }
-
-        $porPagina = (int) $r->query('por_pagina', 10);
-        $porPagina = max(5, min(100, $porPagina));
-
-        return VeiculoRecurso::collection($q->paginate($porPagina));
+        })->when($r->filled('marca'), fn($q)=>$q->where('marca',$r->marca))
+          ->when($r->filled('ano_min'), fn($q)=>$q->where('ano','>=',(int)$r->ano_min))
+          ->when($r->filled('ano_max'), fn($q)=>$q->where('ano','<=',(int)$r->ano_max));
+    
+        $sort = in_array($r->get('sort'), ['mais_novos','mais_antigos','preco_asc','preco_desc'])
+          ? $r->get('sort') : 'mais_novos';
+    
+        match ($sort) {
+          'mais_antigos' => $q->orderBy('created_at','asc'),
+          'preco_asc'    => $q->orderBy('valor_venda','asc'),
+          'preco_desc'   => $q->orderBy('valor_venda','desc'),
+          default        => $q->orderBy('created_at','desc')
+        };
+    
+        $perPage = min(max((int)$r->get('per_page', 10), 5), 50);
+        $page = $q->paginate($perPage)->withQueryString();
+    
+        return VeiculoRecurso::collection($page);
     }
 
     public function store(VeiculoArmazenarRequest $req)

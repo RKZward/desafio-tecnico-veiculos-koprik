@@ -9,62 +9,43 @@ use Illuminate\Support\Facades\Storage;
 
 class VeiculoImagemController extends Controller
 {
-    // POST /veiculos/{veiculo}/imagens
-// POST /veiculos/{veiculo}/imagens
 public function enviar(Request $request, Veiculo $veiculo)
 {
-    $this->authorize('update', $veiculo); 
+    $this->authorize('update', $veiculo);
 
-    $validated = $request->validate([
-        'arquivo' => ['required','file','image','mimes:jpg,jpeg,png,webp','max:2048'], // ou 5120
+    $data = $request->validate([
+        'imagens' => ['required','array','min:1','max:10'],
+        'imagens.*' => ['file','image','mimes:jpg,jpeg,png,webp','max:4096'],
     ]);
 
-    $file = $validated['arquivo'];
-
-    $path = $file->store('veiculos', 'public');
-
-    $img = new ImagemVeiculo([
-        'path'     => $path,
-        'is_cover' => false,
-        'order'    => (int) ($veiculo->imagens()->max('order') ?? 0) + 1,
-    ]);
-
-    $veiculo->imagens()->save($img);
-
-    if ($veiculo->capa()->doesntExist()) {
-        $img->is_cover = true;
-        $img->save();
+    $saved = [];
+    foreach ($data['imagens'] as $file) {
+        $path = $file->store("veiculos/{$veiculo->id}", 'public');
+        $saved[] = $veiculo->imagens()->create([
+            'path' => $path,
+            'is_cover' => false,
+            'order' => $veiculo->imagens()->max('order') + 1,
+        ]);
     }
 
     return response()->json([
-        'id'       => $img->id,
-        'path'     => $img->path,
-        'is_cover' => $img->is_cover,
+        'imagens' => collect($saved)->map(fn($img)=>[
+            'id'=>$img->id,'url'=>asset('storage/'.$img->path),'is_cover'=>$img->is_cover,'order'=>$img->order
+        ])
     ], 201);
 }
 
-
-    // PATCH /veiculos/{veiculo}/imagens/{imagem}/capa
     public function definirCapa(Veiculo $veiculo, ImagemVeiculo $imagem)
     {
         $this->authorize('update', $veiculo);
-
-        // garante vínculo correto
-        if ($imagem->veiculo_id !== $veiculo->id) {
-            abort(404);
-        }
-
-        // zera capas anteriores
+        abort_if($imagem->veiculo_id !== $veiculo->id, 404);
+    
         $veiculo->imagens()->update(['is_cover' => false]);
-
-        // marca atual
-        $imagem->is_cover = true;
-        $imagem->save();
-
+        $imagem->update(['is_cover' => true]);
+    
         return response()->noContent();
     }
 
-    // DELETE /veiculos/{veiculo}/imagens/{imagem}
     public function excluir(Veiculo $veiculo, ImagemVeiculo $imagem)
     {
         $this->authorize('update', $veiculo);
