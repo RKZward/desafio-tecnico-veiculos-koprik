@@ -24,13 +24,13 @@ class VeiculoSeeder extends Seeder
             ->each(function (Veiculo $v) {
                 // cria 2 “imagens” vazias por veículo e marca uma como capa
                 for ($i=1; $i<=2; $i++) {
-                    $path = "vehicles/{$v->id}/seed-{$i}.jpg";
+                    $path = "veiculos/{$v->id}/seed-{$i}.jpg";
                     Storage::disk('public')->put($path, 'seed'); // conteúdo simples
                     ImagemVeiculo::create([
-                        'vehicle_id' => $v->id,
+                        'veiculo_id' => $v->id,
                         'path'       => $path,
                         'is_cover'   => $i === 1,
-                    ]);
+                      ]);
                 }
             });
     }

@@ -24,7 +24,7 @@ class Veiculo extends Model
     ];
 
     // Relações em PT-BR (FK veiculo_id)
-    public function imagens() { return $this->hasMany(ImagemVeiculo::class, 'vehicle_id'); }
-    public function capa()    { return $this->hasOne(ImagemVeiculo::class, 'vehicle_id')->where('is_cover', true); }
+    public function imagens() { return $this->hasMany(ImagemVeiculo::class, 'veiculo_id'); }
+    public function capa()    { return $this->hasOne(ImagemVeiculo::class, 'veiculo_id')->where('is_cover', true); }
     public function usuario() { return $this->belongsTo(User::class, 'user_id'); }
 }

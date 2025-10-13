@@ -1,5 +1,5 @@
+# docker-compose.yml
 name: vehicles-stack
-
 services:
   mysql:
     image: mysql:8.0
@@ -8,59 +8,69 @@ services:
       MYSQL_USER: dev
       MYSQL_PASSWORD: dev
       MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
     command: --default-authentication-plugin=mysql_native_password
     volumes:
       - db_mysql_data:/var/lib/mysql
+    networks: [appnet]
 
   redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
+    image: redis:7-alpine
+    networks: [appnet]
 
   api:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    env_file:
-      - ./apps/api/.env
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: vehicles
+      DB_USERNAME: dev
+      DB_PASSWORD: dev
+      CACHE_DRIVER: redis
+      QUEUE_CONNECTION: database
+      REDIS_HOST: redis
+      FRONTEND_URL: http://localhost:5173
     volumes:
       - ./apps/api:/var/www/html
+      - api_storage:/var/www/html/storage
+      - api_vendor:/var/www/html/vendor
+    depends_on: [mysql, redis]
+    networks: [appnet]
+
+  api-nginx:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./apps/api:/var/www/html:ro
+      - ./apps/api/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "8000:8000"
-    depends_on:
-      - mysql
-      - redis
-    command: >
-      sh -lc "
-      if [ ! -f artisan ]; then
-        rm -rf ./* .[^.]* 2>/dev/null || true &&
-        composer create-project laravel/laravel:^12 . ;
-      fi &&
-      composer install &&
-      php artisan key:generate --ansi || true &&
-      php artisan migrate --seed || true &&
-      php artisan serve --host=0.0.0.0 --port=8000
-      "
+      - "8000:80"
+    depends_on: [api]
+    networks: [appnet]
 
   web:
     build:
       context: ./apps/web
-      dockerfile: Dockerfile.dev
-      container_name: web-1
-      working_dir: /app
-
+      dockerfile: Dockerfile
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api
+      VITE_API_BASE_URL: http://localhost:8000/api
     volumes:
       - ./apps/web:/usr/src/app
     ports:
       - "5173:5173"
     command: >
       sh -lc "npm ci || npm i && npm run dev -- --host 0.0.0.0 --port 5173"
-    depends_on:
-      - api
+    depends_on: [api-nginx]
+    networks: [appnet]
 
 volumes:
   db_mysql_data:
+  api_storage:
+  api_vendor:
+
+networks:
+  appnet:

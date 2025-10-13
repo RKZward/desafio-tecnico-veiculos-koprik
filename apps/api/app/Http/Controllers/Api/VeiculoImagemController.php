@@ -17,7 +17,7 @@ class VeiculoImagemController extends Controller
         $this->authorize('update', $veiculo);
 
         $req->validate([
-            'imagens.*' => ['required', 'image', 'max:2048'],
+            'imagens.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $criados = [];

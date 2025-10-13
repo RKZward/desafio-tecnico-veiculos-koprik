@@ -12,5 +12,5 @@ class ImagemVeiculo extends Model
 
     protected $casts = ['is_cover' => 'boolean', 'order' => 'integer'];
 
-    public function veiculo() { return $this->belongsTo(Veiculo::class, 'vehicle_id'); }
+    public function veiculo() { return $this->belongsTo(Veiculo::class, 'veiculo_id'); }
 }
