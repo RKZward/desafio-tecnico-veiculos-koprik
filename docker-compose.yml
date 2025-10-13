@@ -112,24 +112,20 @@ services:
     networks: [appnet]
 
   web:
+    container_name: web-1
     build:
       context: ./apps/web
-    working_dir: /usr/src/app
+      dockerfile: Dockerfile
+      args:
+        # lido no build do Vite; default para acessar a API via Nginx interno
+        VITE_API_URL: ${VITE_API_URL:-http://nginx-api/api}
     environment:
-      VITE_API_URL: http://localhost:8000/api
-    volumes:
-      - ./apps/web:/usr/src/app
-      - /usr/src/app/node_modules
-    command: >
-      sh -lc "
-        (npm ci || npm i) &&
-        npm run dev -- --host 0.0.0.0 --port 5173
-      "
+      # útil se você também usa runtime em dev/local
+      - VITE_API_URL=${VITE_API_URL:-http://nginx-api/api}
     ports:
-      - "5173:5173"
+      - "5173:80"          # Nginx do front exposto na 5173 do host
     depends_on:
-      nginx-api:
-        condition: service_started
+      - nginx-api
     networks: [appnet]
 
 volumes:
