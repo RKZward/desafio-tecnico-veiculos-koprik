@@ -3,61 +3,77 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\{ Veiculo, ImagemVeiculo };
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Veiculo;
 
 class VeiculoImagemController extends Controller
 {
-
-    public function enviar(Request $req, int $veiculoId)
+    // POST /veiculos/{veiculo}/imagens
+    public function enviar(Request $request, Veiculo $veiculo)
     {
-        $veiculo = Veiculo::findOrFail($veiculoId);
-        $this->authorize('update', $veiculo);
+        $this->authorize('update', $veiculo); 
 
-        $req->validate([
-            'imagens.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        // validar arquivo (adequar conforme sua regra atual)
+        $dados = $request->validate([
+            'arquivo' => ['required','file','mimes:jpg,jpeg,png,webp','max:5120'],
         ]);
 
-        $criados = [];
-        foreach ($req->file('imagens', []) as $arquivo) {
-            $path = $arquivo->store("veiculos/{$veiculo->id}", 'public');
-            $criados[] = $veiculo->imagens()->create(['path' => $path]);
+        $path = $request->file('arquivo')->store('veiculos', 'public');
+
+        // cria relação
+        $img = new ImagemVeiculo([
+            'path'     => $path,
+            'is_cover' => false,
+            'order'    => (int) ($veiculo->imagens()->max('order') ?? 0) + 1,
+        ]);
+
+        $veiculo->imagens()->save($img);
+
+        // se for a primeira imagem, pode optar por setar como capa
+        if ($veiculo->capa()->doesntExist()) {
+            $img->is_cover = true;
+            $img->save();
         }
 
         return response()->json([
-            'imagens' => collect($criados)->map(fn ($i) => [
-                'id'       => $i->id,
-                'url'      => asset('storage/' . $i->path),
-                'is_cover' => $i->is_cover,
-                'order'    => $i->order,
-            ]),
+            'id'   => $img->id,
+            'path' => $img->path,
+            'is_cover' => $img->is_cover,
         ], 201);
     }
 
-    public function definirCapa(int $veiculoId, int $imagemId)
+    // PATCH /veiculos/{veiculo}/imagens/{imagem}/capa
+    public function definirCapa(Veiculo $veiculo, ImagemVeiculo $imagem)
     {
-        $veiculo = Veiculo::findOrFail($veiculoId);
         $this->authorize('update', $veiculo);
 
-        DB::transaction(function () use ($veiculo, $imagemId) {
-            $veiculo->imagens()->where('is_cover', true)->update(['is_cover' => false]);
-            $veiculo->imagens()->where('id', $imagemId)->update(['is_cover' => true]);
-        });
+        // garante vínculo correto
+        if ($imagem->veiculo_id !== $veiculo->id) {
+            abort(404);
+        }
 
-        return response()->json(['ok' => true]);
+        // zera capas anteriores
+        $veiculo->imagens()->update(['is_cover' => false]);
+
+        // marca atual
+        $imagem->is_cover = true;
+        $imagem->save();
+
+        return response()->noContent();
     }
 
-    public function excluir(int $veiculoId, int $imagemId)
+    // DELETE /veiculos/{veiculo}/imagens/{imagem}
+    public function excluir(Veiculo $veiculo, ImagemVeiculo $imagem)
     {
-        $veiculo = Veiculo::findOrFail($veiculoId);
         $this->authorize('update', $veiculo);
 
-        $img = $veiculo->imagens()->where('id', $imagemId)->firstOrFail();
+        if ($imagem->veiculo_id !== $veiculo->id) {
+            abort(404);
+        }
 
-        Storage::disk('public')->delete($img->path);
-        $img->delete();
+        Storage::disk('public')->delete($imagem->path);
+        $imagem->delete();
 
         return response()->noContent();
     }

@@ -4,63 +4,41 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Veiculo;
-use Illuminate\Auth\Access\Response;
 
 class VeiculoPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    // Quem pode ver listas (index)
     public function viewAny(User $user): bool
     {
-        return false;
+        return true; // todos autenticados podem ver a listagem
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
+    // Quem pode ver um veículo específico (show)
     public function view(User $user, Veiculo $veiculo): bool
     {
-        return false;
+        return true; // público autenticado; ajuste se necessário
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
+    // Quem pode criar (store)
     public function create(User $user): bool
     {
-        return false;
+        return true; // qualquer usuário autenticado pode criar
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
+    // Quem pode atualizar (update)
     public function update(User $user, Veiculo $veiculo): bool
     {
-        return false;
+        // dono pode; admin é tratado pelo Gate::before
+        return (int)$veiculo->user_id === (int)$user->id;
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
+    // Quem pode deletar (destroy)
     public function delete(User $user, Veiculo $veiculo): bool
     {
-        return false;
+        return (int)$veiculo->user_id === (int)$user->id;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Veiculo $veiculo): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Veiculo $veiculo): bool
-    {
-        return false;
-    }
+    // (opcionais)
+    public function restore(User $user, Veiculo $veiculo): bool { return false; }
+    public function forceDelete(User $user, Veiculo $veiculo): bool { return false; }
 }

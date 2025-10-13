@@ -7,8 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Veiculo;
 use App\Http\Resources\VeiculoRecurso;
-use App\Http\Requests\VeiculoArmazenarRequest;
-use App\Http\Requests\VeiculoAtualizarRequest;
+use App\Http\Requests\{ VeiculoArmazenarRequest, VeiculoAtualizarRequest };
 
 class VeiculoController extends Controller
 {
@@ -56,26 +55,25 @@ class VeiculoController extends Controller
         return new VeiculoRecurso($v->load('capa','imagens'));
     }
 
-    public function show(int $id)
+    // Binding: /veiculos/{veiculo}
+    public function show(Veiculo $veiculo)
     {
-        $v = Veiculo::with('capa','imagens')->findOrFail($id);
-        return new VeiculoRecurso($v);
+        return new VeiculoRecurso($veiculo->load('capa','imagens'));
     }
 
-    public function update(VeiculoAtualizarRequest $req, int $id)
+    public function update(VeiculoAtualizarRequest $req, Veiculo $veiculo)
     {
-        $v = Veiculo::findOrFail($id);
-        $this->authorize('update', $v);
+        $this->authorize('update', $veiculo);
 
-        $v->update($req->validated());
-        return new VeiculoRecurso($v->fresh('capa','imagens'));
+        $veiculo->update($req->validated());
+        return new VeiculoRecurso($veiculo->fresh('capa','imagens'));
     }
 
-    public function destroy(int $id)
+    public function destroy(Veiculo $veiculo)
     {
-        $v = Veiculo::findOrFail($id);
-        $this->authorize('delete', $v);
-        $v->delete();
+        $this->authorize('delete', $veiculo);
+
+        $veiculo->delete();
         return response()->noContent();
     }
 }
