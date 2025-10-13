@@ -27,7 +27,7 @@ export default function VehiclesForm() {
   useEffect(() => {
     if (!isEdit) return;
     (async () => {
-      const { data } = await api.get(`/veiculos/${id}`); // <- PT-BR
+      const { data } = await api.get(`/veiculos/${id}`);
       const v = data as Vehicle;
       reset({
         placa: v.placa,
@@ -38,58 +38,87 @@ export default function VehiclesForm() {
         valor_venda: Number(v.valor_venda),
         cor: v.cor ?? "",
         km: v.km,
-        cambio: v.cambio as Form["cambio"],
-        combustivel: v.combustivel as Form["combustivel"]
+        cambio: v.cambio,
+        combustivel: v.combustivel,
       });
     })();
   }, [id, isEdit, reset]);
 
   const onSubmit = async (data: Form) => {
-    // normaliza placa para o backend (opcional, server já faz, mas ajuda UX)
     if (data.placa) data.placa = data.placa.toUpperCase().replace(/[-\s]/g, "");
-
-    if (isEdit) {
-      await api.put(`/veiculos/${id}`, data);    // <- PT-BR
-    } else {
-      await api.post(`/veiculos`, data);         // <- PT-BR
-    }
+    if (isEdit) await api.put(`/veiculos/${id}`, data);
+    else await api.post(`/veiculos`, data);
     navigate("/veiculos");
   };
 
   return (
     <section className="max-w-2xl">
-      <h1 className="text-xl font-bold mb-4">
-        {isEdit ? "Editar veículo" : "Cadastrar veículo"}
-      </h1>
+      <h1 className="text-xl font-bold mb-4">{isEdit ? "Editar veículo" : "Cadastrar veículo"}</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-3 bg-white p-4 rounded border">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 bg-white p-4 rounded border">
         <div className="grid md:grid-cols-3 gap-3">
-          <input className="border rounded px-2 py-1" placeholder="Placa (ABC1D23)" {...register("placa")} />
-          <input className="border rounded px-2 py-1" placeholder="Chassi (17 chars)" {...register("chassi")} />
-          <input className="border rounded px-2 py-1" placeholder="Marca" {...register("marca")} />
-          <input className="border rounded px-2 py-1" placeholder="Modelo" {...register("modelo")} />
-          <input className="border rounded px-2 py-1" placeholder="Versão" {...register("versao")} />
-          <input className="border rounded px-2 py-1" placeholder="Cor" {...register("cor")} />
+          <div>
+            <label htmlFor="placa" className="block text-sm font-medium text-gray-700 mb-1">Placa</label>
+            <input id="placa" className="border rounded px-2 py-1 w-full" placeholder="ABC1D23" {...register("placa")} />
+          </div>
+
+          <div>
+            <label htmlFor="chassi" className="block text-sm font-medium text-gray-700 mb-1">Chassi</label>
+            <input id="chassi" className="border rounded px-2 py-1 w-full" placeholder="17 caracteres" {...register("chassi")} />
+          </div>
+
+          <div>
+            <label htmlFor="marca" className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+            <input id="marca" className="border rounded px-2 py-1 w-full" placeholder="Fiat, VW, etc." {...register("marca")} />
+          </div>
+
+          <div>
+            <label htmlFor="modelo" className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+            <input id="modelo" className="border rounded px-2 py-1 w-full" placeholder="Toro, Gol, etc." {...register("modelo")} />
+          </div>
+
+          <div>
+            <label htmlFor="versao" className="block text-sm font-medium text-gray-700 mb-1">Versão</label>
+            <input id="versao" className="border rounded px-2 py-1 w-full" placeholder="Ex.: Endurance" {...register("versao")} />
+          </div>
+
+          <div>
+            <label htmlFor="cor" className="block text-sm font-medium text-gray-700 mb-1">Cor</label>
+            <input id="cor" className="border rounded px-2 py-1 w-full" placeholder="Vermelha" {...register("cor")} />
+          </div>
         </div>
 
         <div className="grid md:grid-cols-5 gap-3">
-          <input className="border rounded px-2 py-1" placeholder="KM" type="int"
-                 {...register("km", { valueAsNumber: true })} />
-          <input className="border rounded px-2 py-1" placeholder="Valor de venda" type="value" step="0.01"
-                 {...register("valor_venda", { valueAsNumber: true })} />
-          <select className="border rounded px-2 py-1" {...register("cambio")}>
-            <option value="manual">Manual</option>
-            <option value="automatico">Automático</option>
-            <option value="cvt">CVT</option>
-          </select>
-          <select className="border rounded px-2 py-1" {...register("combustivel")}>
-            <option value="gasolina">Gasolina</option>
-            <option value="etanol">Etanol</option>     {/* <- backend espera 'etanol' (não 'alcool') */}
-            <option value="flex">Flex</option>
-            <option value="diesel">Diesel</option>
-            <option value="hibrido">Híbrido</option>
-            <option value="eletrico">Elétrico</option>
-          </select>
+          <div>
+            <label htmlFor="km" className="block text-sm font-medium text-gray-700 mb-1">KM</label>
+            <input id="km" className="border rounded px-2 py-1 w-full" type="number" {...register("km", { valueAsNumber: true })} />
+          </div>
+
+          <div>
+            <label htmlFor="valor_venda" className="block text-sm font-medium text-gray-700 mb-1">Valor de Venda</label>
+            <input id="valor_venda" className="border rounded px-2 py-1 w-full" type="number" step="0.01" {...register("valor_venda", { valueAsNumber: true })} />
+          </div>
+
+          <div>
+            <label htmlFor="cambio" className="block text-sm font-medium text-gray-700 mb-1">Câmbio</label>
+            <select id="cambio" className="border rounded px-2 py-1 w-full" {...register("cambio")}>
+              <option value="manual">Manual</option>
+              <option value="automatico">Automático</option>
+              <option value="cvt">CVT</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="combustivel" className="block text-sm font-medium text-gray-700 mb-1">Combustível</label>
+            <select id="combustivel" className="border rounded px-2 py-1 w-full" {...register("combustivel")}>
+              <option value="gasolina">Gasolina</option>
+              <option value="etanol">Etanol</option>
+              <option value="flex">Flex</option>
+              <option value="diesel">Diesel</option>
+              <option value="hibrido">Híbrido</option>
+              <option value="eletrico">Elétrico</option>
+            </select>
+          </div>
         </div>
 
         <div className="flex gap-2">
