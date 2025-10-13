@@ -10,22 +10,22 @@ import Protected from "@/components/Protected";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
     element: <App />,
     children: [
-      { index: true, element: <Navigate to="/veiculos" replace /> },
-      { path: "login", element: <Login /> },
-      { path: "registrar", element: <Register /> },
+      { path: "/", element: <Navigate to="/veiculos" replace /> },
+      { path: "/login", element: <Login /> },
+      { path: "/registrar", element: <Register /> },
       {
         element: <Protected />,
         children: [
-          { path: "home", element: <Home /> },
-          { path: "veiculos", element: <VehiclesList /> },
-          { path: "veiculos/novo", element: <VehiclesForm /> },
-          { path: "veiculos/:id", element: <VehiclesDetail /> },
-          { path: "veiculos/:id/editar", element: <VehiclesForm /> }
-        ]
-      }
-    ]
-  }
+          { path: "/home", element: <Home /> },
+          { path: "/veiculos", element: <VehiclesList /> },
+          { path: "/veiculos/novo", element: <VehiclesForm /> },
+          { path: "/veiculos/:id", element: <VehiclesDetail /> },
+          { path: "/veiculos/:id/editar", element: <VehiclesForm /> },
+        ],
+      },
+      { path: "*", element: <Navigate to="/veiculos" replace /> },
+    ],
+  },
 ]);

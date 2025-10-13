@@ -14,10 +14,9 @@ class AuthController extends Controller
     public function register(Request $req)
     {
         $data = $req->validate([
-            'name'                  => ['required','string','max:255'],
-            'email'                 => ['required','email','max:255','unique:users,email'],
-            'password'              => ['required','confirmed','min:6'],
-            // precisa enviar password_confirmation no payload
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password'              => ['required', 'confirmed', 'min:6'],
         ]);
 
         $email = Str::lower(trim($data['email']));
@@ -28,53 +27,28 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        $tokenName = 'api:'.($req->userAgent() ?: 'unknown');
+        $tokenName = 'api:' . ($req->userAgent() ?: 'unknown');
         $token = $user->createToken($tokenName)->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'type'  => 'Bearer',
-            'user'  => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'admin' => (bool) $user->is_admin,
-            ],
-        ], 201);
+        return response()->json(['token' => $token], 201);
     }
-
     public function login(Request $req)
     {
         $cred = $req->validate([
-            'email'    => ['required','email'],
-            'password' => ['required','string'],
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
         $email = Str::lower(trim($cred['email']));
-        $user = User::where('email', $email)->first();
+        $user  = User::where('email', $email)->first();
 
-        if (! $user || ! Hash::check($cred['password'], $user->password)) {
+        if (!$user || !Hash::check($cred['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Credenciais inválidas.'],
-            ]);
+            ])->status(401);
         }
-
-        // Se quiser apenas 1 token por usuário, descomente:
-        // $user->tokens()->delete();
-
-        $tokenName = 'api:'.($req->userAgent() ?: 'unknown');
+        $tokenName = 'api:' . ($req->userAgent() ?: 'unknown');
         $token = $user->createToken($tokenName)->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'type'  => 'Bearer',
-            'user'  => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'admin' => (bool) $user->is_admin,
-            ],
-        ], 201); // 201 porque um token (recurso) foi criado
+        return response()->json(['token' => $token], 200);
     }
 
     public function me(Request $req)
@@ -85,7 +59,6 @@ class AuthController extends Controller
             'id'    => $u->id,
             'name'  => $u->name,
             'email' => $u->email,
-            'admin' => (bool) $u->is_admin,
         ]);
     }
 

@@ -1,15 +1,12 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/auth";
 
-const API_BASE = import.meta.env.VITE_API_URL as string;
-
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL as string,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json"
   },
-  // Cookies não são usados; autenticação via Bearer token
 });
 
 api.interceptors.request.use((config) => {
@@ -25,8 +22,9 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err?.response?.status === 401) {
-      useAuthStore.getState().logout();
-      // redireciona para login
+      const { logout } = useAuthStore.getState();
+      logout();
+      
       window.location.href = "/login";
     }
     return Promise.reject(err);

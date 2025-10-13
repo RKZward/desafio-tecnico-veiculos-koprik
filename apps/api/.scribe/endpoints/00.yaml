@@ -35,7 +35,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          vary: Origin
         description: null
         custom: []
     responseFields: []
@@ -71,17 +71,17 @@ endpoints:
     responses:
       -
         status: 200
-        content: |-
+        content: |
           <!doctype html>
           <html lang="en-US">
           <body>
+          <script src="oauth2-redirect.js"></script>
           </body>
           </html>
-          <script src="oauth2-redirect.js"></script>
         headers:
           content-type: 'text/html; charset=UTF-8'
           cache-control: 'no-cache, private'
-          access-control-allow-origin: '*'
+          vary: Origin
         description: null
         custom: []
     responseFields: []
@@ -209,46 +209,6 @@ endpoints:
     custom: []
   -
     httpMethods:
-      - GET
-    uri: api/auth/eu
-    metadata:
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-      custom: []
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-        custom: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-    custom: []
-  -
-    httpMethods:
       - POST
     uri: api/auth/sair
     metadata:
@@ -281,6 +241,46 @@ endpoints:
   -
     httpMethods:
       - GET
+    uri: api/auth/me
+    metadata:
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
     uri: api/veiculos
     metadata:
       groupName: Endpoints
@@ -309,7 +309,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          vary: Origin
         description: null
         custom: []
     responseFields: []
@@ -342,9 +342,9 @@ endpoints:
     bodyParameters:
       marca:
         name: marca
-        description: 'Must not be greater than 60 characters.'
+        description: 'Marca do veículo. Must not be greater than 60 characters.'
         required: true
-        example: vmqeopfuudtdsufvyvddq
+        example: Ford
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -352,9 +352,9 @@ endpoints:
         custom: []
       modelo:
         name: modelo
-        description: 'Must not be greater than 80 characters.'
+        description: 'Modelo do veículo. Must not be greater than 80 characters.'
         required: true
-        example: amniihfqcoynlazghdtqt
+        example: Fiesta
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -362,9 +362,9 @@ endpoints:
         custom: []
       ano:
         name: ano
-        description: 'Must be between 1900 and 2026.'
+        description: 'Ano de fabricação/modelo. Must be between 1900 and 2026.'
         required: true
-        example: 1901
+        example: 2024
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -372,9 +372,9 @@ endpoints:
         custom: []
       placa:
         name: placa
-        description: 'Must match the regex /^[A-Z]{3}\d[A-Z]\d{2}$/.'
+        description: 'Placa padrão Mercosul (normalizada para ABC1D23). Must match the regex /^[A-Z]{3}\d[A-Z]\d{2}$/.'
         required: true
-        example: OPF7U17
+        example: ABC1D23
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -382,9 +382,9 @@ endpoints:
         custom: []
       chassi:
         name: chassi
-        description: 'Must be 17 characters.'
+        description: 'Número do chassi (17 caracteres). Must be 17 characters.'
         required: true
-        example: dsufvyvddqamniihf
+        example: 9BWZZZ377VT004251
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -392,9 +392,9 @@ endpoints:
         custom: []
       km:
         name: km
-        description: 'Must be at least 0.'
+        description: 'Quilometragem atual. Must be at least 0.'
         required: true
-        example: 57
+        example: 12345
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -402,9 +402,9 @@ endpoints:
         custom: []
       valor_venda:
         name: valor_venda
-        description: 'Must be at least 0.'
+        description: 'Preço de venda. Must be at least 0.'
         required: true
-        example: 8
+        example: 79990.0
         type: number
         enumValues: []
         exampleWasSpecified: false
@@ -412,7 +412,7 @@ endpoints:
         custom: []
       cambio:
         name: cambio
-        description: ''
+        description: 'Tipo de câmbio.'
         required: true
         example: manual
         type: string
@@ -425,9 +425,9 @@ endpoints:
         custom: []
       combustivel:
         name: combustivel
-        description: ''
+        description: 'Tipo de combustível.'
         required: true
-        example: etanol
+        example: gasolina
         type: string
         enumValues:
           - gasolina
@@ -441,25 +441,25 @@ endpoints:
         custom: []
       cor:
         name: cor
-        description: 'Must not be greater than 30 characters.'
+        description: 'Cor (opcional). Must not be greater than 30 characters.'
         required: false
-        example: oynlazghdtqtqxbajwbpi
+        example: preto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         custom: []
     cleanBodyParameters:
-      marca: vmqeopfuudtdsufvyvddq
-      modelo: amniihfqcoynlazghdtqt
-      ano: 1901
-      placa: OPF7U17
-      chassi: dsufvyvddqamniihf
-      km: 57
-      valor_venda: 8
+      marca: Ford
+      modelo: Fiesta
+      ano: 2024
+      placa: ABC1D23
+      chassi: 9BWZZZ377VT004251
+      km: 12345
+      valor_venda: 79990.0
       cambio: manual
-      combustivel: etanol
-      cor: oynlazghdtqtqxbajwbpi
+      combustivel: gasolina
+      cor: preto
     fileParameters: []
     responses: []
     responseFields: []
@@ -490,14 +490,14 @@ endpoints:
         name: id
         description: 'The ID of the veiculo.'
         required: true
-        example: consequatur
-        type: string
+        example: 17
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      id: consequatur
+      id: 17
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -510,7 +510,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          vary: Origin
         description: null
         custom: []
     responseFields: []
@@ -542,22 +542,22 @@ endpoints:
         name: id
         description: 'The ID of the veiculo.'
         required: true
-        example: consequatur
-        type: string
+        example: 17
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      id: consequatur
+      id: 17
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
       marca:
         name: marca
-        description: 'Must not be greater than 60 characters.'
+        description: 'Marca do veículo. Must not be greater than 60 characters.'
         required: true
-        example: vmqeopfuudtdsufvyvddq
+        example: Ford
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -565,9 +565,9 @@ endpoints:
         custom: []
       modelo:
         name: modelo
-        description: 'Must not be greater than 80 characters.'
+        description: 'Modelo do veículo. Must not be greater than 80 characters.'
         required: true
-        example: amniihfqcoynlazghdtqt
+        example: Fiesta
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -575,9 +575,9 @@ endpoints:
         custom: []
       ano:
         name: ano
-        description: 'Must be between 1900 and 2026.'
+        description: 'Ano de fabricação/modelo. Must be between 1900 and 2026.'
         required: true
-        example: 1901
+        example: 2024
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -585,9 +585,9 @@ endpoints:
         custom: []
       placa:
         name: placa
-        description: 'Must match the regex /^[A-Z]{3}\d[A-Z]\d{2}$/.'
+        description: 'Placa padrão Mercosul (normalizada para ABC1D23). Must match the regex /^[A-Z]{3}\d[A-Z]\d{2}$/.'
         required: true
-        example: OPF7U17
+        example: ABC1D23
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -595,9 +595,9 @@ endpoints:
         custom: []
       chassi:
         name: chassi
-        description: 'Must be 17 characters.'
+        description: 'Número do chassi (17 caracteres). Must be 17 characters.'
         required: true
-        example: dsufvyvddqamniihf
+        example: 9BWZZZ377VT004251
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -605,9 +605,9 @@ endpoints:
         custom: []
       km:
         name: km
-        description: 'Must be at least 0.'
+        description: 'Quilometragem atual. Must be at least 0.'
         required: true
-        example: 57
+        example: 13000
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -615,9 +615,9 @@ endpoints:
         custom: []
       valor_venda:
         name: valor_venda
-        description: 'Must be at least 0.'
+        description: 'Preço de venda. Must be at least 0.'
         required: true
-        example: 8
+        example: 78990.0
         type: number
         enumValues: []
         exampleWasSpecified: false
@@ -625,7 +625,7 @@ endpoints:
         custom: []
       cambio:
         name: cambio
-        description: ''
+        description: 'Tipo de câmbio.'
         required: true
         example: automatico
         type: string
@@ -638,9 +638,9 @@ endpoints:
         custom: []
       combustivel:
         name: combustivel
-        description: ''
+        description: 'Tipo de combustível.'
         required: true
-        example: eletrico
+        example: flex
         type: string
         enumValues:
           - gasolina
@@ -654,25 +654,25 @@ endpoints:
         custom: []
       cor:
         name: cor
-        description: 'Must not be greater than 30 characters.'
+        description: 'Cor (opcional). Must not be greater than 30 characters.'
         required: false
-        example: oynlazghdtqtqxbajwbpi
+        example: branco
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         custom: []
     cleanBodyParameters:
-      marca: vmqeopfuudtdsufvyvddq
-      modelo: amniihfqcoynlazghdtqt
-      ano: 1901
-      placa: OPF7U17
-      chassi: dsufvyvddqamniihf
-      km: 57
-      valor_venda: 8
+      marca: Ford
+      modelo: Fiesta
+      ano: 2024
+      placa: ABC1D23
+      chassi: 9BWZZZ377VT004251
+      km: 13000
+      valor_venda: 78990.0
       cambio: automatico
-      combustivel: eletrico
-      cor: oynlazghdtqtqxbajwbpi
+      combustivel: flex
+      cor: branco
     fileParameters: []
     responses: []
     responseFields: []
@@ -703,269 +703,14 @@ endpoints:
         name: id
         description: 'The ID of the veiculo.'
         required: true
-        example: consequatur
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-    cleanUrlParameters:
-      id: consequatur
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-    custom: []
-  -
-    httpMethods:
-      - GET
-    uri: 'api/veiculos/{id}'
-    metadata:
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-      custom: []
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        name: id
-        description: 'The ID of the veiculo.'
-        required: true
-        example: consequatur
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-    cleanUrlParameters:
-      id: consequatur
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-        custom: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-    custom: []
-  -
-    httpMethods:
-      - PUT
-      - PATCH
-    uri: 'api/veiculos/{id}'
-    metadata:
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-      custom: []
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        name: id
-        description: 'The ID of the veiculo.'
-        required: true
-        example: consequatur
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-    cleanUrlParameters:
-      id: consequatur
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      marca:
-        name: marca
-        description: 'Must not be greater than 60 characters.'
-        required: true
-        example: vmqeopfuudtdsufvyvddq
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      modelo:
-        name: modelo
-        description: 'Must not be greater than 80 characters.'
-        required: true
-        example: amniihfqcoynlazghdtqt
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      ano:
-        name: ano
-        description: 'Must be between 1900 and 2026.'
-        required: true
-        example: 1901
+        example: 17
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
-      placa:
-        name: placa
-        description: 'Must match the regex /^[A-Z]{3}\d[A-Z]\d{2}$/.'
-        required: true
-        example: OPF7U17
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      chassi:
-        name: chassi
-        description: 'Must be 17 characters.'
-        required: true
-        example: dsufvyvddqamniihf
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      km:
-        name: km
-        description: 'Must be at least 0.'
-        required: true
-        example: 57
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      valor_venda:
-        name: valor_venda
-        description: 'Must be at least 0.'
-        required: true
-        example: 8
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      cambio:
-        name: cambio
-        description: ''
-        required: true
-        example: cvt
-        type: string
-        enumValues:
-          - manual
-          - automatico
-          - cvt
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      combustivel:
-        name: combustivel
-        description: ''
-        required: true
-        example: eletrico
-        type: string
-        enumValues:
-          - gasolina
-          - etanol
-          - flex
-          - diesel
-          - eletrico
-          - hibrido
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
-      cor:
-        name: cor
-        description: 'Must not be greater than 30 characters.'
-        required: false
-        example: oynlazghdtqtqxbajwbpi
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        custom: []
-    cleanBodyParameters:
-      marca: vmqeopfuudtdsufvyvddq
-      modelo: amniihfqcoynlazghdtqt
-      ano: 1901
-      placa: OPF7U17
-      chassi: dsufvyvddqamniihf
-      km: 57
-      valor_venda: 8
-      cambio: cvt
-      combustivel: eletrico
-      cor: oynlazghdtqtqxbajwbpi
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-    custom: []
-  -
-    httpMethods:
-      - DELETE
-    uri: 'api/veiculos/{id}'
-    metadata:
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-      custom: []
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        name: id
-        description: 'The ID of the veiculo.'
-        required: true
-        example: consequatur
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        custom: []
     cleanUrlParameters:
-      id: consequatur
+      id: 17
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -981,7 +726,7 @@ endpoints:
   -
     httpMethods:
       - POST
-    uri: 'api/veiculos/{veiculoId}/imagens'
+    uri: 'api/veiculos/{veiculo_id}/imagens'
     metadata:
       groupName: Endpoints
       groupDescription: ''
@@ -996,25 +741,25 @@ endpoints:
       Content-Type: multipart/form-data
       Accept: application/json
     urlParameters:
-      veiculoId:
-        name: veiculoId
-        description: ''
+      veiculo_id:
+        name: veiculo_id
+        description: 'The ID of the veiculo.'
         required: true
-        example: consequatur
-        type: string
+        example: 17
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      veiculoId: consequatur
+      veiculo_id: 17
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
       imagens:
         name: imagens
-        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
-        required: true
+        description: 'Must be a file. Must be an image. Must not be greater than 4096 kilobytes.'
+        required: false
         example:
           - null
         type: 'file[]'
@@ -1036,7 +781,7 @@ endpoints:
   -
     httpMethods:
       - PATCH
-    uri: 'api/veiculos/{veiculoId}/imagens/{imagemId}/capa'
+    uri: 'api/veiculos/{veiculo_id}/imagens/{imagem_id}/capa'
     metadata:
       groupName: Endpoints
       groupDescription: ''
@@ -1051,29 +796,29 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      veiculoId:
-        name: veiculoId
-        description: ''
+      veiculo_id:
+        name: veiculo_id
+        description: 'The ID of the veiculo.'
         required: true
-        example: consequatur
-        type: string
+        example: 17
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
-      imagemId:
-        name: imagemId
-        description: ''
+      imagem_id:
+        name: imagem_id
+        description: 'The ID of the imagem.'
         required: true
-        example: consequatur
-        type: string
+        example: 17
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      veiculoId: consequatur
-      imagemId: consequatur
+      veiculo_id: 17
+      imagem_id: 17
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -1089,7 +834,7 @@ endpoints:
   -
     httpMethods:
       - DELETE
-    uri: 'api/veiculos/{veiculoId}/imagens/{imagemId}'
+    uri: 'api/veiculos/{veiculo_id}/imagens/{imagem_id}'
     metadata:
       groupName: Endpoints
       groupDescription: ''
@@ -1104,29 +849,29 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      veiculoId:
-        name: veiculoId
-        description: ''
+      veiculo_id:
+        name: veiculo_id
+        description: 'The ID of the veiculo.'
         required: true
-        example: consequatur
-        type: string
+        example: 17
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
-      imagemId:
-        name: imagemId
-        description: ''
+      imagem_id:
+        name: imagem_id
+        description: 'The ID of the imagem.'
         required: true
-        example: consequatur
-        type: string
+        example: 17
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         custom: []
     cleanUrlParameters:
-      veiculoId: consequatur
-      imagemId: consequatur
+      veiculo_id: 17
+      imagem_id: 17
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []

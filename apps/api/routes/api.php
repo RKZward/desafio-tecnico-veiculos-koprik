@@ -1,11 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\{
-    AuthController,
-    VeiculoController,
-    VeiculoImagemController
-};
+use App\Http\Controllers\Api\{AuthController, VeiculoController, VeiculoImagemController};
 
 Route::prefix('auth')->group(function () {
     Route::post('registrar', [AuthController::class, 'register'])->middleware('throttle:register');

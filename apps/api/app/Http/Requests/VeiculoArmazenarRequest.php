@@ -6,7 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class VeiculoArmazenarRequest extends FormRequest
 {
-
     protected function prepareForValidation(): void
     {
         if ($this->has('placa') && $this->input('placa') !== null) {
@@ -16,6 +15,7 @@ class VeiculoArmazenarRequest extends FormRequest
     }
 
     public function authorize(): bool { return true; }
+
     public function rules(): array
     {
         return [
@@ -29,6 +29,65 @@ class VeiculoArmazenarRequest extends FormRequest
             'cambio'       => ['required','in:manual,automatico,cvt'],
             'combustivel'  => ['required','in:gasolina,etanol,flex,diesel,eletrico,hibrido'],
             'cor'          => ['nullable','string','max:30'],
+        ];
+    }
+
+    /**
+     * Scribe: descrição dos parâmetros do corpo da requisição.
+     */
+    public function bodyParameters(): array
+    {
+        return [
+            'marca' => [
+                'description' => 'Marca do veículo.',
+                'example' => 'Ford',
+                'required' => true,
+            ],
+            'modelo' => [
+                'description' => 'Modelo do veículo.',
+                'example' => 'Fiesta',
+                'required' => true,
+            ],
+            'ano' => [
+                'description' => 'Ano de fabricação/modelo.',
+                'example' => 2024,
+                'required' => true,
+            ],
+            'placa' => [
+                'description' => 'Placa padrão Mercosul (normalizada para ABC1D23).',
+                'example' => 'ABC1D23',
+                'required' => true,
+            ],
+            'chassi' => [
+                'description' => 'Número do chassi (17 caracteres).',
+                'example' => '9BWZZZ377VT004251',
+                'required' => true,
+            ],
+            'km' => [
+                'description' => 'Quilometragem atual.',
+                'example' => 12345,
+                'required' => true,
+            ],
+            'valor_venda' => [
+                'description' => 'Preço de venda.',
+                'example' => 79990.00,
+                'required' => true,
+            ],
+            'cambio' => [
+                'description' => 'Tipo de câmbio.',
+                'example' => 'manual',
+                'required' => true,
+            ],
+            'combustivel' => [
+                'description' => 'Tipo de combustível.',
+                'example' => 'gasolina',
+                'required' => true,
+            ],
+            'cor' => [
+                'description' => 'Cor (opcional).',
+                'example' => 'preto',
+                'required' => false,
+            ],
         ];
     }
 }

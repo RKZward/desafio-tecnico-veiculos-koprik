@@ -1,11 +1,20 @@
 import { create } from "zustand";
 import api from "@/lib/api";
-import type { User, LoginPayload, RegisterPayload } from "@/types";
+
+export type User = { id: number; name: string; email: string };
+export type LoginPayload = { email: string; password: string };
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+};
 
 type AuthState = {
   token: string | null;
   user: User | null;
   loading: boolean;
+
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   getMe: () => Promise<void>;
@@ -20,10 +29,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (payload) => {
     set({ loading: true });
     try {
-      const { data } = await api.post("/auth/login", payload);
-      // Assumindo retorno { token: "...", user: {...} }
+      const { data } = await api.post<{ token: string }>("/auth/entrar", payload);
       localStorage.setItem("token", data.token);
-      set({ token: data.token, user: data.user });
+      set({ token: data.token });
+      await get().getMe();
     } finally {
       set({ loading: false });
     }
@@ -32,9 +41,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (payload) => {
     set({ loading: true });
     try {
-      await api.post("/auth/register", payload);
-      // Após registro, efetua login automático (opcional)
-      await get().login({ email: payload.email, password: payload.password });
+      const { data } = await api.post<{ token: string }>("/auth/registrar", payload);
+      localStorage.setItem("token", data.token);
+      set({ token: data.token });
+      await get().getMe();
     } finally {
       set({ loading: false });
     }
@@ -42,23 +52,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   getMe: async () => {
     if (!get().token) return;
-    set({ loading: true });
-    try {
-      const { data } = await api.get("/auth/me");
-      set({ user: data });
-    } finally {
-      set({ loading: false });
-    }
+    const { data } = await api.get<User>("/auth/me");
+    set({ user: data });
   },
 
   logout: async () => {
     try {
-      await api.post("/auth/logout");
-    } catch (_) {
-      // ignorar
+      await api.post("/auth/sair");
+    } catch {
+      // ignora erro de rede
     } finally {
       localStorage.removeItem("token");
       set({ token: null, user: null });
     }
-  }
+  },
 }));

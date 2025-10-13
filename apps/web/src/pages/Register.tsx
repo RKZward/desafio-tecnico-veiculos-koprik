@@ -15,16 +15,28 @@ export default function Register() {
   };
 
   return (
-    <section className="max-w-md mx-auto mt-8 bg-white p-6 rounded border">
-      <h1 className="text-xl font-bold mb-4">Registrar</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-3">
-        <input {...register("name")} placeholder="Nome" className="border rounded px-3 py-2" />
-        <input {...register("email")} placeholder="E-mail" className="border rounded px-3 py-2" />
-        <input {...register("password")} placeholder="Senha" type="password" className="border rounded px-3 py-2" />
-        <input {...register("password_confirmation")} placeholder="Confirmar senha" type="password" className="border rounded px-3 py-2" />
-        <button disabled={loading} className="bg-black text-white px-3 py-2 rounded">Criar conta</button>
+    <section className="max-w-xl mx-auto bg-white border rounded p-8 mt-16">
+      <h2 className="text-2xl font-semibold mb-6">Registrar</h2>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <input className="w-full border rounded p-3" placeholder="nome"
+               {...register("name", { required: true })} />
+        <input className="w-full border rounded p-3" placeholder="email"
+               type="email" {...register("email", { required: true })} />
+        <input className="w-full border rounded p-3" placeholder="senha"
+               type="password" {...register("password", { required: true, minLength: 6 })} />
+        <input className="w-full border rounded p-3" placeholder="confirme a senha"
+               type="password" {...register("password_confirmation", { required: true })} />
+
+        <button type="submit" disabled={loading}
+                className="w-full p-3 rounded bg-black text-white">
+          {loading ? "Criando conta..." : "Criar conta"}
+        </button>
       </form>
-      <p className="text-sm mt-3">Já possui conta? <Link to="/login" className="underline">Entrar</Link></p>
+
+      <p className="mt-4 text-sm">
+        Já possui conta? <Link className="underline" to="/login">Entrar</Link>
+      </p>
     </section>
   );
 }
