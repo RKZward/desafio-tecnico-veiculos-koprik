@@ -10,38 +10,39 @@ use Illuminate\Support\Facades\Storage;
 class VeiculoImagemController extends Controller
 {
     // POST /veiculos/{veiculo}/imagens
-    public function enviar(Request $request, Veiculo $veiculo)
-    {
-        $this->authorize('update', $veiculo); 
+// POST /veiculos/{veiculo}/imagens
+public function enviar(Request $request, Veiculo $veiculo)
+{
+    $this->authorize('update', $veiculo); 
 
-        // validar arquivo (adequar conforme sua regra atual)
-        $dados = $request->validate([
-            'arquivo' => ['required','file','mimes:jpg,jpeg,png,webp','max:5120'],
-        ]);
+    $validated = $request->validate([
+        'arquivo' => ['required','file','image','mimes:jpg,jpeg,png,webp','max:2048'], // ou 5120
+    ]);
 
-        $path = $request->file('arquivo')->store('veiculos', 'public');
+    $file = $validated['arquivo'];
 
-        // cria relação
-        $img = new ImagemVeiculo([
-            'path'     => $path,
-            'is_cover' => false,
-            'order'    => (int) ($veiculo->imagens()->max('order') ?? 0) + 1,
-        ]);
+    $path = $file->store('veiculos', 'public');
 
-        $veiculo->imagens()->save($img);
+    $img = new ImagemVeiculo([
+        'path'     => $path,
+        'is_cover' => false,
+        'order'    => (int) ($veiculo->imagens()->max('order') ?? 0) + 1,
+    ]);
 
-        // se for a primeira imagem, pode optar por setar como capa
-        if ($veiculo->capa()->doesntExist()) {
-            $img->is_cover = true;
-            $img->save();
-        }
+    $veiculo->imagens()->save($img);
 
-        return response()->json([
-            'id'   => $img->id,
-            'path' => $img->path,
-            'is_cover' => $img->is_cover,
-        ], 201);
+    if ($veiculo->capa()->doesntExist()) {
+        $img->is_cover = true;
+        $img->save();
     }
+
+    return response()->json([
+        'id'       => $img->id,
+        'path'     => $img->path,
+        'is_cover' => $img->is_cover,
+    ], 201);
+}
+
 
     // PATCH /veiculos/{veiculo}/imagens/{imagem}/capa
     public function definirCapa(Veiculo $veiculo, ImagemVeiculo $imagem)

@@ -7,10 +7,19 @@ use Illuminate\Validation\Rule;
 
 class VeiculoAtualizarRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('placa') && $this->input('placa') !== null) {
+            $normalizada = strtoupper(str_replace(['-', ' '], '', $this->input('placa')));
+            $this->merge(['placa' => $normalizada]);
+        }
+    }
+
     public function authorize(): bool { return true; }
     public function rules(): array
     {
-        $id = $this->route('id');
+        $veiculo = $this->route('veiculo'); // <- binding
+        $id = $veiculo?->id;
         return [
             'marca'        => ['sometimes','required','string','max:60'],
             'modelo'       => ['sometimes','required','string','max:80'],

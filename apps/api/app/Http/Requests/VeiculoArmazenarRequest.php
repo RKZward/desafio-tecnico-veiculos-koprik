@@ -6,6 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class VeiculoArmazenarRequest extends FormRequest
 {
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('placa') && $this->input('placa') !== null) {
+            $normalizada = strtoupper(str_replace(['-', ' '], '', $this->input('placa')));
+            $this->merge(['placa' => $normalizada]);
+        }
+    }
+
     public function authorize(): bool { return true; }
     public function rules(): array
     {

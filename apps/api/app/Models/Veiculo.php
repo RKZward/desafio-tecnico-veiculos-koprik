@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Veiculo extends Model
 {
@@ -23,7 +24,16 @@ class Veiculo extends Model
         'valor_venda' => 'decimal:2',
     ];
 
-    // Relações em PT-BR (FK veiculo_id)
+    protected function placa(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($v) => is_null($v)
+                ? null
+                : strtoupper(str_replace(['-', ' '], '', $v))
+        );
+    }
+
+
     public function imagens() { return $this->hasMany(ImagemVeiculo::class, 'veiculo_id'); }
     public function capa()    { return $this->hasOne(ImagemVeiculo::class, 'veiculo_id')->where('is_cover', true); }
     public function usuario() { return $this->belongsTo(User::class, 'user_id'); }
