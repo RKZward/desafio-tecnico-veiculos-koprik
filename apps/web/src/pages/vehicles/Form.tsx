@@ -4,7 +4,8 @@ import api from "@/lib/api";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Vehicle } from "@/types";
 
-type Form = Omit<Vehicle,
+type Form = Omit<
+  Vehicle,
   "id" | "user_id" | "created_at" | "updated_at" | "images" | "audit"
 >;
 
@@ -14,19 +15,19 @@ const defaults: Partial<Form> = {
   cambio: "manual",
   combustivel: "gasolina",
   km: 0,
-  valor_venda: 0
+  valor_venda: 0,
 };
 
 export default function VehiclesForm() {
   const { id } = useParams();
   const isEdit = Boolean(id);
-  const { register, handleSubmit, setValue, reset } = useForm<Form>({ defaultValues: defaults });
+  const { register, handleSubmit, reset } = useForm<Form>({ defaultValues: defaults });
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!isEdit) return;
     (async () => {
-      const { data } = await api.get(`/vehicles/${id}`);
+      const { data } = await api.get(`/veiculos/${id}`); // <- PT-BR
       const v = data as Vehicle;
       reset({
         placa: v.placa,
@@ -37,24 +38,30 @@ export default function VehiclesForm() {
         valor_venda: Number(v.valor_venda),
         cor: v.cor ?? "",
         km: v.km,
-        cambio: v.cambio,
-        combustivel: v.combustivel
+        cambio: v.cambio as Form["cambio"],
+        combustivel: v.combustivel as Form["combustivel"]
       });
     })();
-  }, [id]);
+  }, [id, isEdit, reset]);
 
   const onSubmit = async (data: Form) => {
+    // normaliza placa para o backend (opcional, server já faz, mas ajuda UX)
+    if (data.placa) data.placa = data.placa.toUpperCase().replace(/[-\s]/g, "");
+
     if (isEdit) {
-      await api.put(`/vehicles/${id}`, data);
+      await api.put(`/veiculos/${id}`, data);    // <- PT-BR
     } else {
-      await api.post(`/vehicles`, data);
+      await api.post(`/veiculos`, data);         // <- PT-BR
     }
     navigate("/veiculos");
   };
 
   return (
     <section className="max-w-2xl">
-      <h1 className="text-xl font-bold mb-4">{isEdit ? "Editar veículo" : "Cadastrar veículo"}</h1>
+      <h1 className="text-xl font-bold mb-4">
+        {isEdit ? "Editar veículo" : "Cadastrar veículo"}
+      </h1>
+
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-3 bg-white p-4 rounded border">
         <div className="grid md:grid-cols-3 gap-3">
           <input className="border rounded px-2 py-1" placeholder="Placa (ABC1D23)" {...register("placa")} />
@@ -65,16 +72,19 @@ export default function VehiclesForm() {
           <input className="border rounded px-2 py-1" placeholder="Cor" {...register("cor")} />
         </div>
 
-        <div className="grid md:grid-cols-4 gap-3">
-          <input className="border rounded px-2 py-1" placeholder="KM" type="number" {...register("km", { valueAsNumber: true })} />
-          <input className="border rounded px-2 py-1" placeholder="Valor de venda" type="number" step="0.01" {...register("valor_venda", { valueAsNumber: true })} />
+        <div className="grid md:grid-cols-5 gap-3">
+          <input className="border rounded px-2 py-1" placeholder="KM" type="int"
+                 {...register("km", { valueAsNumber: true })} />
+          <input className="border rounded px-2 py-1" placeholder="Valor de venda" type="value" step="0.01"
+                 {...register("valor_venda", { valueAsNumber: true })} />
           <select className="border rounded px-2 py-1" {...register("cambio")}>
             <option value="manual">Manual</option>
             <option value="automatico">Automático</option>
+            <option value="cvt">CVT</option>
           </select>
           <select className="border rounded px-2 py-1" {...register("combustivel")}>
             <option value="gasolina">Gasolina</option>
-            <option value="alcool">Álcool</option>
+            <option value="etanol">Etanol</option>     {/* <- backend espera 'etanol' (não 'alcool') */}
             <option value="flex">Flex</option>
             <option value="diesel">Diesel</option>
             <option value="hibrido">Híbrido</option>
